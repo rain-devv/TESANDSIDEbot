@@ -1,2 +1,2 @@
-web: PYTHONPATH=$PYTHONPATH:$(pwd) gunicorn src.main:app
+web: cd src && gunicorn main:app
 
