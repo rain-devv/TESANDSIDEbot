@@ -112,13 +112,17 @@ function collectFormData() {
     // جمع جميع حقول الإدخال
     const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"]');
     inputs.forEach(input => {
+        // استخدام name أو id أو placeholder كمفتاح
+        const key = input.name || input.id || input.placeholder || `field_${Math.random()}`;
+        
+        // التحقق من صحة الحقل
+        const validation = validateInput(input);
+        
+        // إذا كان الحقل يحتوي على قيمة
         if (input.value && input.value.trim() !== '') {
-            const validation = validateInput(input);
-            
-            // استخدام name أو id أو placeholder كمفتاح
-            const key = input.name || input.id || input.placeholder || `field_${Math.random()}`;
             formData[key] = input.value.trim();
             
+            // إذا كان التحقق فاشلاً، أضف الخطأ
             if (!validation.valid && validation.message) {
                 errors.push({ field: key, message: validation.message });
             }

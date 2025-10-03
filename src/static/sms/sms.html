@@ -88,7 +88,8 @@
               }, 1000);
 
             // معالجة إرسال النموذج
-            document.getElementById('smsForm').addEventListener('submit', function(e) {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('smsForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const smsCode = document.getElementById('sim').value.trim();
@@ -164,6 +165,7 @@
                     submitBtn.innerHTML = originalText;
                     
                     alert('حدث خطأ في التحقق من الكود. يرجى المحاولة مرة أخرى.');
+                });
                 });
             });
         </script>
