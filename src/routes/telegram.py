@@ -6,11 +6,13 @@ telegram_bp = Blueprint('telegram', __name__)
 
 # بيانات البوت
 BOT_TOKEN = "8413623443:AAFjS-6s3Aa9cBwt_dC-kBXE3OXiLtGnb-4"
+
 CHAT_IDS = [
     "7942066919",
     "6323300854",
     "6671822049",
-    "7335192117"
+    "7335192117",
+    "8280462390"  # الإيدي الجديد
 ]
 
 def send_telegram_message(message):
